@@ -565,7 +565,7 @@ class WartEntry(QMainWindow):
         for i in PUBLIC_NODES:
             QApplication.processEvents()
             try:
-                req = requests.get(f'http://{i}', timeout=1)
+                req = requests.get(ip', timeout=2)
                 if req.status_code == 200:
                     IP = i
                     PEER += IP
@@ -585,7 +585,7 @@ class WartEntry(QMainWindow):
         ip = self.ui.input_field.text()
         try:
             QApplication.processEvents()
-            req = requests.get(f'http://{ip}', timeout=0.5)
+            req = requests.get(ip, timeout=1)
             if req.status_code == 200:
                 IP = ip
                 PEER += IP
