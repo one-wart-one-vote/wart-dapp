@@ -31,7 +31,7 @@ flag = False
 PUBLIC_NODES = ['193.218.118.57:3001', '193.218.118.57:3001', '185.209.228.16:3001', '51.75.21.134:3001', 'node.0xf10.com']
 IP = None
 db = DB()
-PEER = ''
+PEER = None
 
 
 class Register(QDialog):
@@ -568,7 +568,7 @@ class WartEntry(QMainWindow):
                 req = requests.get(f'http://{i}', timeout=2)
                 if req.status_code == 200:
                     IP = i
-                    PEER += 'http://' + str(IP)
+                    PEER = 'http://' + IP
                     wallets.show()
                     self.close()
                     return IP,PEER
