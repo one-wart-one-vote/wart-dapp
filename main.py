@@ -31,7 +31,7 @@ flag = False
 PUBLIC_NODES = ['193.218.118.57:3001', '193.218.118.57:3001', '185.209.228.16:3001', '51.75.21.134:3001', 'node.0xf10.com']
 IP = None
 db = DB()
-PEER = 'http://'
+PEER = ''
 
 
 class Register(QDialog):
@@ -568,7 +568,7 @@ class WartEntry(QMainWindow):
                 req = requests.get(f'http://{i}', timeout=2)
                 if req.status_code == 200:
                     IP = i
-                    PEER += IP
+                    PEER += 'http://' + str(IP)
                     wallets.show()
                     self.close()
                     return IP,PEER
@@ -581,17 +581,16 @@ class WartEntry(QMainWindow):
         self.show()
 
     def private_connect(self):
-        global IP,PEER
+        global PEER
         ip = self.ui.input_field.text()
         try:
             QApplication.processEvents()
             req = requests.get(ip, timeout=1)
             if req.status_code == 200:
-                IP = ip
-                PEER += IP
+                PEER = ip
                 wallets.show()
                 self.close()
-                return IP,PEER
+                return PEER
         except Exception as e:
             err = Error()
             self.hide()
