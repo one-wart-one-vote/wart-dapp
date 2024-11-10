@@ -543,7 +543,7 @@ class WartEntry(QMainWindow):
         for i in PUBLIC_NODES:
             QApplication.processEvents()
             try:
-                req = requests.get(f'http://{i}', timeout=2)
+                req = requests.get(f'http://{i}', timeout=1)
                 if req.status_code == 200:
                     IP = i
                     PEER = 'http://' + IP
