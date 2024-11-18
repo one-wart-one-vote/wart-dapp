@@ -41,45 +41,17 @@ jobs:
         run: |
           softwareupdate --install-rosetta --agree-to-license
 
-      - name: Install x86_64 Homebrew
-        run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          echo 'eval "$(/usr/local/bin/brew shellenv)"' >> $GITHUB_ENV
-          eval "$(/usr/local/bin/brew shellenv)"
-
-      - name: Install x86_64 Python via Homebrew
-        run: |
-          arch -x86_64 /usr/local/bin/brew install python@3.10
-          echo 'export PATH="/usr/local/opt/python@3.10/bin:$PATH"' >> $GITHUB_ENV
-          source $GITHUB_ENV
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          architecture: 'x64' # Ensure using x86_64 architecture
+          # setup-python will automatically detect architecture, ensuring ARM64
 
-      - name: Install dependencies (Intel)
+      - name: Install dependencies
         run: |
-          arch -x86_64 python3 -m pip install --upgrade pip
-          arch -x86_64 python3 -m pip install -r requirements.txt
-          arch -x86_64 brew install create-dmg
-
-      - name: Build for Intel
-        env:
-          ARCHFLAGS: "-arch x86_64"
-        run: |
-          # Using x86_64 architecture for building
-          arch -x86_64 python3 -m PyInstaller main-x86_64.spec --distpath dist-x86_64 --workpath build-x86_64 --clean
-          
-          mkdir dist/
-          # Rename the generated .app
-          mv dist-x86_64/wart-dapp.app dist/wart-dapp-x86_64.app
-
-      - name: Verify Intel Build Architecture
-        run: |
-          # Verify the architecture of the Intel version
-          file dist/wart-dapp-x86_64.app/Contents/MacOS/wart-dapp
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt
+          brew install create-dmg
 
       - name: Build for ARM
         env:
@@ -96,37 +68,23 @@ jobs:
           # Verify the architecture of the ARM version
           file dist/wart-dapp-arm64.app/Contents/MacOS/wart-dapp
 
-      - name: Create Universal Binary
-        run: |
-          # Create the target directory
-          mkdir -p dist/universal/wart-dapp.app/Contents/MacOS
-          
-          # Copy all files from the ARM version to the universal directory
-          cp -R dist/wart-dapp-arm64.app/* dist/universal/wart-dapp.app/
-          
-          # Use lipo to create the universal binary file
-          lipo -create \
-            dist/wart-dapp-x86_64.app/Contents/MacOS/wart-dapp \
-            dist/wart-dapp-arm64.app/Contents/MacOS/wart-dapp \
-            -output dist/universal/wart-dapp.app/Contents/MacOS/wart-dapp
-
       - name: Create DMG
         run: |
           mkdir -p dist/dmg
           create-dmg \
-            --volname "wart-dapp-macos-universal" \
+            --volname "wart-dapp-macos-arm64" \
             --window-pos 200 120 \
             --window-size 800 400 \
             --icon-size 100 \
             --app-drop-link 600 185 \
-            "dist/dmg/wart-dapp-macos-universal.dmg" \
-            "dist/universal/wart-dapp.app"
+            "dist/dmg/wart-dapp-macos-arm64.dmg" \
+            "dist/wart-dapp-arm64.app"
       
       - name: Upload Mac build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: macos-build-universal
-          path: 'dist/dmg/wart-dapp-macos-universal.dmg'
+          name: macos-build-arm64
+          path: 'dist/dmg/wart-dapp-macos-arm64.dmg'
 
   release:
     needs: [build-ubuntu, build-macos]
@@ -146,10 +104,10 @@ jobs:
           name: ubuntu-build
           path: ./build
 
-      - name: Download Mac Universal build artifact
+      - name: Download Mac build artifact
         uses: actions/download-artifact@v3
         with:
-          name: macos-build-universal
+          name: macos-build-arm64
           path: ./dist/dmg
 
       - name: Release
@@ -162,4 +120,4 @@ jobs:
           generate_release_notes: true
           files: |
             ./build/wart-dapp-ubuntu22
-            ./dist/dmg/wart-dapp-macos-universal.dmg
+            ./dist/dmg/wart-dapp-macos-arm64.dmg
