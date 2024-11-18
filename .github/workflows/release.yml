@@ -52,13 +52,21 @@ jobs:
 
         - name: Create DMG
           run: |
-              create-dmg 'dist/wart-dapp.app' --overwrite --dmg-title='Wart DApp'
-
+              mkdir -p dist/dmg
+              create-dmg \
+                --volname "Wart DApp" \
+                --window-pos 200 120 \
+                --window-size 800 400 \
+                --icon-size 100 \
+                --app-drop-link 600 185 \
+                "dist/dmg/Wart DApp.dmg" \
+                "dist/wart-dapp.app"
+          
         - name: Upload Mac build artifact
           uses: actions/upload-artifact@v3
           with:
             name: macos-build
-            path: 'Wart DApp.dmg'
+            path: 'dist/dmg/Wart DApp.dmg'
 
   release:
     needs: [build-ubuntu, build-macos]
