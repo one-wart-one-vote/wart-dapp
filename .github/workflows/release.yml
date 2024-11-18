@@ -1,141 +1,138 @@
 name: Release
 on:
-    push:
-        branches:
-            - master
-    workflow_dispatch:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
 
 jobs:
   build-ubuntu:
     runs-on: ubuntu-latest
     steps:
-        - name: Checkout
-          uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
-        - name: Docker Build
-          run: DOCKER_BUILDKIT=1 docker build . -f dockerfiles/Dockerfile --output build
+      - name: Docker Build
+        run: |
+          DOCKER_BUILDKIT=1 docker build . -f dockerfiles/Dockerfile --output build
 
-        - name: Get version
-          id: get_version
-          run: |
-              echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV 
+      - name: Get version
+        id: get_version
+        run: |
+          echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV 
 
-        - name: Upload Ubuntu build artifact
-          uses: actions/upload-artifact@v3
-          with:
-            name: ubuntu-build
-            path: ./build/wart-dapp-ubuntu22
+      - name: Upload Ubuntu build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-build
+          path: ./build/wart-dapp-ubuntu22
 
   build-macos:
     runs-on: macos-latest
     needs: build-ubuntu
     steps:
-        - name: Checkout
-          uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-        - name: Set up Python
-          uses: actions/setup-python@v4
-          with:
-            python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-        - name: Install dependencies
-          run: |
-              brew install create-dmg
-              python3 -m pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          brew install create-dmg
+          python3 -m pip install -r requirements.txt
 
-        - name: Build for Intel
-          env:
-            ARCHFLAGS: "-arch x86_64"
-          run: |
-              # Build Intel version
-              python3 -m PyInstaller main.spec \
-                --distpath dist-x86_64 \
-                --workpath build-x86_64 \
-                --specpath spec-x86_64 \
-                --clean
-              # Rename generated .app
-              mv dist-x86_64/wart-dapp.app dist/wart-dapp-x86_64.app
+      - name: Build for Intel
+        env:
+          ARCHFLAGS: "-arch x86_64"
+        run: |
+          # Build Intel version
+          python3 -m PyInstaller main-x86_64.spec --distpath dist-x86_64 --workpath build-x86_64 --clean
+          # Rename the generated .app
+          mv dist-x86_64/wart-dapp.app dist/wart-dapp-x86_64.app
 
-        - name: Build for ARM
-          env:
-            ARCHFLAGS: "-arch arm64"
-          run: |
-              # Build ARM version
-              python3 -m PyInstaller main.spec \
-                --distpath dist-arm64 \
-                --workpath build-arm64 \
-                --specpath spec-arm64 \
-                --clean
-              # Rename generated .app
-              mv dist-arm64/wart-dapp.app dist/wart-dapp-arm64.app
+      - name: Build for ARM
+        env:
+          ARCHFLAGS: "-arch arm64"
+        run: |
+          # Build ARM version
+          python3 -m PyInstaller main-arm64.spec --distpath dist-arm64 --workpath build-arm64 --clean
+          # Rename the generated .app
+          mv dist-arm64/wart-dapp.app dist/wart-dapp-arm64.app
 
-        - name: Create Universal Binary
-          run: |
-              # Create target directory
-              mkdir -p dist/universal/wart-dapp.app/Contents/MacOS
-              
-              # Copy all files from ARM version to universal directory
-              cp -R dist/wart-dapp-arm64.app/* dist/universal/wart-dapp.app/
-              
-              # Use lipo to create universal binary file
-              lipo -create \
-                dist/wart-dapp-x86_64.app/Contents/MacOS/wart-dapp \
-                dist/wart-dapp-arm64.app/Contents/MacOS/wart-dapp \
-                -output dist/universal/wart-dapp.app/Contents/MacOS/wart-dapp
-
-        - name: Create DMG
-          run: |
-              mkdir -p dist/dmg
-              create-dmg \
-                --volname "wart-dapp-macos-universal" \
-                --window-pos 200 120 \
-                --window-size 800 400 \
-                --icon-size 100 \
-                --app-drop-link 600 185 \
-                "dist/dmg/wart-dapp-macos-universal.dmg" \
-                "dist/universal/wart-dapp.app"
+      - name: Create Universal Binary
+        run: |
+          # Check if source files exist
+          ls -la dist/wart-dapp-x86_64.app/Contents/MacOS/ || echo "Intel binary not found"
+          ls -la dist/wart-dapp-arm64.app/Contents/MacOS/ || echo "ARM binary not found"
           
-        - name: Upload Mac build artifact
-          uses: actions/upload-artifact@v3
-          with:
-            name: macos-build-universal
-            path: 'dist/dmg/wart-dapp-macos-universal.dmg'
+          # Create target directory
+          mkdir -p dist/universal/wart-dapp.app/Contents/MacOS
+          
+          # Copy all files from ARM version to universal directory
+          cp -R dist/wart-dapp-arm64.app/* dist/universal/wart-dapp.app/
+          
+          # Use lipo to create universal binary file
+          lipo -create \
+            dist/wart-dapp-x86_64.app/Contents/MacOS/wart-dapp \
+            dist/wart-dapp-arm64.app/Contents/MacOS/wart-dapp \
+            -output dist/universal/wart-dapp.app/Contents/MacOS/wart-dapp
+
+      - name: Create DMG
+        run: |
+          mkdir -p dist/dmg
+          create-dmg \
+            --volname "wart-dapp-macos-universal" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --app-drop-link 600 185 \
+            "dist/dmg/wart-dapp-macos-universal.dmg" \
+            "dist/universal/wart-dapp.app"
+        
+      - name: Upload Mac build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-build-universal
+          path: 'dist/dmg/wart-dapp-macos-universal.dmg'
 
   release:
     needs: [build-ubuntu, build-macos]
     runs-on: ubuntu-latest
     steps:
-        - name: Checkout
-          uses: actions/checkout@v3
-        
-        - name: Get version
-          id: get_version
-          run: |
-              echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV 
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Get version
+        id: get_version
+        run: |
+          echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV 
 
-        - name: Download Ubuntu build artifact
-          uses: actions/download-artifact@v3
-          with:
-            name: ubuntu-build
-            path: ./build
+      - name: Download Ubuntu build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-build
+          path: ./build
 
-        - name: Download Mac Universal build artifact
-          uses: actions/download-artifact@v3
-          with:
-            name: macos-build-universal
-            path: ./dist/dmg
+      - name: Download Mac Universal build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: macos-build-universal
+          path: ./dist/dmg
 
-        - name: Release
-          uses: softprops/action-gh-release@v0.1.15
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            tag_name: v${{ env.VERSION }}
-            name: Release v${{ env.VERSION }}
-            generate_release_notes: true
-            files: |
-                ./build/wart-dapp-ubuntu22
-                ./dist/dmg/wart-dapp-macos-universal.dmg
+      - name: Release
+        uses: softprops/action-gh-release@v0.1.15
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: Release v${{ env.VERSION }}
+          generate_release_notes: true
+          files: |
+            ./build/wart-dapp-ubuntu22
+            ./dist/dmg/wart-dapp-macos-universal.dmg
