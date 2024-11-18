@@ -32,9 +32,6 @@ jobs:
   build-macos:
     runs-on: macos-latest
     needs: build-ubuntu
-    strategy:
-      matrix:
-        arch: ['x86_64', 'arm64']
     steps:
         - name: Checkout
           uses: actions/checkout@v3
@@ -49,9 +46,36 @@ jobs:
               brew install create-dmg
               python3 -m pip install -r requirements.txt
 
-        - name: Build application
+        - name: Build for Intel
+          env:
+            ARCHFLAGS: "-arch x86_64"
           run: |
+              # Build for Intel
               python3 -m PyInstaller main.spec
+              mv dist/wart-dapp.app dist/wart-dapp-x86_64.app
+
+        - name: Build for ARM
+          env:
+            ARCHFLAGS: "-arch arm64"
+          run: |
+              # Clean and build for ARM
+              rm -rf build dist
+              python3 -m PyInstaller main.spec
+              mv dist/wart-dapp.app dist/wart-dapp-arm64.app
+
+        - name: Create Universal Binary
+          run: |
+              # Create universal binary directory
+              mkdir -p dist/universal/wart-dapp.app/Contents/MacOS
+              
+              # Copy app structure from ARM build
+              cp -R dist/wart-dapp-arm64.app/* dist/universal/wart-dapp.app/
+              
+              # Create universal binary
+              lipo -create \
+                dist/wart-dapp-x86_64.app/Contents/MacOS/wart-dapp \
+                dist/wart-dapp-arm64.app/Contents/MacOS/wart-dapp \
+                -output dist/universal/wart-dapp.app/Contents/MacOS/wart-dapp
 
         - name: Create DMG
           run: |
@@ -63,7 +87,7 @@ jobs:
                 --icon-size 100 \
                 --app-drop-link 600 185 \
                 "dist/dmg/wart-dapp-macos-universal.dmg" \
-                "dist/wart-dapp.app"
+                "dist/universal/wart-dapp.app"
           
         - name: Upload Mac build artifact
           uses: actions/upload-artifact@v3
