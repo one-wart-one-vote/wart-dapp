@@ -41,3 +41,19 @@ coll = COLLECT(
     upx_exclude=[],
     name='main',
 )
+
+app = BUNDLE(
+    exe,
+    name='wart-dapp.app',
+    icon=None,
+    bundle_identifier='com.wart.dapp',
+    info_plist={
+        'CFBundleName': 'Wart DApp',
+        'CFBundleDisplayName': 'Wart DApp',
+        'CFBundleExecutable': 'wart-dapp',
+        'CFBundlePackageType': 'APPL',
+        'CFBundleShortVersionString': '1.0.0',
+        'NSHighResolutionCapable': True,
+        'LSBackgroundOnly': False,
+    }
+)

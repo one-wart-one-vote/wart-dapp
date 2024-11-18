@@ -48,25 +48,25 @@ jobs:
 
         - name: Build application
           run: |
-              pyinstaller main.spec
+              python3 -m PyInstaller --clean --windowed main.spec
 
         - name: Create DMG
           run: |
               mkdir -p dist/dmg
               create-dmg \
-                --volname "Wart DApp" \
+                --volname "wart-dapp-macos" \
                 --window-pos 200 120 \
                 --window-size 800 400 \
                 --icon-size 100 \
                 --app-drop-link 600 185 \
-                "dist/dmg/Wart DApp.dmg" \
+                "dist/dmg/wart-dapp-macos.dmg" \
                 "dist/wart-dapp.app"
           
         - name: Upload Mac build artifact
           uses: actions/upload-artifact@v3
           with:
             name: macos-build
-            path: 'dist/dmg/Wart DApp.dmg'
+            path: 'dist/dmg/wart-dapp-macos.dmg'
 
   release:
     needs: [build-ubuntu, build-macos]
@@ -102,4 +102,4 @@ jobs:
             generate_release_notes: true
             files: |
                 ./build/wart-dapp-ubuntu22
-                ./dist/dmg/Wart*.dmg
+                ./dist/dmg/wart-dapp-macos.dmg
