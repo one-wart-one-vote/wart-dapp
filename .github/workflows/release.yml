@@ -60,13 +60,9 @@ jobs:
           # Building ARM version
           python3 -m PyInstaller main-arm64.spec --distpath dist-arm64 --workpath build-arm64 --clean
           
+          mkdir dist/
           # Rename the generated .app
           mv dist-arm64/wart-dapp.app dist/wart-dapp-arm64.app
-
-      - name: Verify ARM Build Architecture
-        run: |
-          # Verify the architecture of the ARM version
-          file dist/wart-dapp-arm64.app/Contents/MacOS/wart-dapp
 
       - name: Create DMG
         run: |
