@@ -2,3 +2,7 @@ build/
 __pycache__
 wartwallet.db
 .idea/
+dist-x86_64/
+dist/
+dist-arm64/
+build-x86_64/

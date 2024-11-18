@@ -1,8 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+block_cipher = None
+
 a = Analysis(
     ['main.py'],
-    pathex=[],
+    pathex=['.'],
     binaries=[],
     datas=[],
     hiddenimports=[],
@@ -12,7 +14,7 @@ a = Analysis(
     excludes=[],
     noarchive=False,
 )
-pyz = PYZ(a.pure)
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(
     pyz,
@@ -57,5 +59,3 @@ app = BUNDLE(
         'LSMinimumSystemVersion': '10.15',
     }
 )
-
-coll.collect_build_info = False

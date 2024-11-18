@@ -53,7 +53,9 @@ jobs:
         run: |
           # Build Intel version
           python3 -m PyInstaller main-x86_64.spec --distpath dist-x86_64 --workpath build-x86_64 --clean
-          # Rename the generated .app
+          
+          mkdir dist/
+          # Rename generated .app
           mv dist-x86_64/wart-dapp.app dist/wart-dapp-x86_64.app
 
       - name: Build for ARM
@@ -62,15 +64,12 @@ jobs:
         run: |
           # Build ARM version
           python3 -m PyInstaller main-arm64.spec --distpath dist-arm64 --workpath build-arm64 --clean
-          # Rename the generated .app
+          
+          # Rename generated .app
           mv dist-arm64/wart-dapp.app dist/wart-dapp-arm64.app
 
       - name: Create Universal Binary
         run: |
-          # Check if source files exist
-          ls -la dist/wart-dapp-x86_64.app/Contents/MacOS/ || echo "Intel binary not found"
-          ls -la dist/wart-dapp-arm64.app/Contents/MacOS/ || echo "ARM binary not found"
-          
           # Create target directory
           mkdir -p dist/universal/wart-dapp.app/Contents/MacOS
           
@@ -94,7 +93,7 @@ jobs:
             --app-drop-link 600 185 \
             "dist/dmg/wart-dapp-macos-universal.dmg" \
             "dist/universal/wart-dapp.app"
-        
+      
       - name: Upload Mac build artifact
         uses: actions/upload-artifact@v3
         with:
