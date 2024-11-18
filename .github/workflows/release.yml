@@ -48,7 +48,7 @@ jobs:
 
         - name: Build application
           run: |
-              python3 -m PyInstaller --clean --windowed main.spec
+              python3 -m PyInstaller main.spec
 
         - name: Create DMG
           run: |
