@@ -28,7 +28,7 @@ exe = EXE(
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=True,
-    target_arch=None,
+    target_arch='universal2',
     codesign_identity=None,
     entitlements_file=None,
 )
@@ -56,5 +56,6 @@ app = BUNDLE(
         'CFBundleShortVersionString': '1.0.0',
         'NSHighResolutionCapable': True,
         'LSBackgroundOnly': False,
+        'LSMinimumSystemVersion': '10.15',
     }
 )
