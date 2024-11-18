@@ -65,6 +65,9 @@ jobs:
 
         - name: Create Universal Binary
           run: |
+              ls -la dist/wart-dapp-x86_64.app/Contents/MacOS/ || echo "Intel binary not found"
+              ls -la dist/wart-dapp-arm64.app/Contents/MacOS/ || echo "ARM binary not found"
+              
               # Create universal binary directory
               mkdir -p dist/universal/wart-dapp.app/Contents/MacOS
               
