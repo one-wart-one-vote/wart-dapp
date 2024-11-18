@@ -50,31 +50,37 @@ jobs:
           env:
             ARCHFLAGS: "-arch x86_64"
           run: |
-              # Build for Intel
-              python3 -m PyInstaller main.spec
-              mv dist/wart-dapp.app dist/wart-dapp-x86_64.app
+              # Build Intel version
+              python3 -m PyInstaller main.spec \
+                --distpath dist-x86_64 \
+                --workpath build-x86_64 \
+                --specpath spec-x86_64 \
+                --clean
+              # Rename generated .app
+              mv dist-x86_64/wart-dapp.app dist/wart-dapp-x86_64.app
 
         - name: Build for ARM
           env:
             ARCHFLAGS: "-arch arm64"
           run: |
-              # Clean and build for ARM
-              rm -rf build dist
-              python3 -m PyInstaller main.spec
-              mv dist/wart-dapp.app dist/wart-dapp-arm64.app
+              # Build ARM version
+              python3 -m PyInstaller main.spec \
+                --distpath dist-arm64 \
+                --workpath build-arm64 \
+                --specpath spec-arm64 \
+                --clean
+              # Rename generated .app
+              mv dist-arm64/wart-dapp.app dist/wart-dapp-arm64.app
 
         - name: Create Universal Binary
           run: |
-              ls -la dist/wart-dapp-x86_64.app/Contents/MacOS/ || echo "Intel binary not found"
-              ls -la dist/wart-dapp-arm64.app/Contents/MacOS/ || echo "ARM binary not found"
-              
-              # Create universal binary directory
+              # Create target directory
               mkdir -p dist/universal/wart-dapp.app/Contents/MacOS
               
-              # Copy app structure from ARM build
+              # Copy all files from ARM version to universal directory
               cp -R dist/wart-dapp-arm64.app/* dist/universal/wart-dapp.app/
               
-              # Create universal binary
+              # Use lipo to create universal binary file
               lipo -create \
                 dist/wart-dapp-x86_64.app/Contents/MacOS/wart-dapp \
                 dist/wart-dapp-arm64.app/Contents/MacOS/wart-dapp \
