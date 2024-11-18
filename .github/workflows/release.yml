@@ -37,46 +37,74 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install Rosetta 2
+        run: |
+          softwareupdate --install-rosetta --agree-to-license
+
+      - name: Install x86_64 Homebrew
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          echo 'eval "$(/usr/local/bin/brew shellenv)"' >> $GITHUB_ENV
+          eval "$(/usr/local/bin/brew shellenv)"
+
+      - name: Install x86_64 Python via Homebrew
+        run: |
+          arch -x86_64 /usr/local/bin/brew install python@3.10
+          echo 'export PATH="/usr/local/opt/python@3.10/bin:$PATH"' >> $GITHUB_ENV
+          source $GITHUB_ENV
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+          architecture: 'x64' # Ensure using x86_64 architecture
 
-      - name: Install dependencies
+      - name: Install dependencies (Intel)
         run: |
-          brew install create-dmg
-          python3 -m pip install -r requirements.txt
+          arch -x86_64 python3 -m pip install --upgrade pip
+          arch -x86_64 python3 -m pip install -r requirements.txt
+          arch -x86_64 brew install create-dmg
 
       - name: Build for Intel
         env:
           ARCHFLAGS: "-arch x86_64"
         run: |
-          # Build Intel version
-          python3 -m PyInstaller main-x86_64.spec --distpath dist-x86_64 --workpath build-x86_64 --clean
+          # Using x86_64 architecture for building
+          arch -x86_64 python3 -m PyInstaller main-x86_64.spec --distpath dist-x86_64 --workpath build-x86_64 --clean
           
           mkdir dist/
-          # Rename generated .app
+          # Rename the generated .app
           mv dist-x86_64/wart-dapp.app dist/wart-dapp-x86_64.app
+
+      - name: Verify Intel Build Architecture
+        run: |
+          # Verify the architecture of the Intel version
+          file dist/wart-dapp-x86_64.app/Contents/MacOS/wart-dapp
 
       - name: Build for ARM
         env:
           ARCHFLAGS: "-arch arm64"
         run: |
-          # Build ARM version
+          # Building ARM version
           python3 -m PyInstaller main-arm64.spec --distpath dist-arm64 --workpath build-arm64 --clean
           
-          # Rename generated .app
+          # Rename the generated .app
           mv dist-arm64/wart-dapp.app dist/wart-dapp-arm64.app
+
+      - name: Verify ARM Build Architecture
+        run: |
+          # Verify the architecture of the ARM version
+          file dist/wart-dapp-arm64.app/Contents/MacOS/wart-dapp
 
       - name: Create Universal Binary
         run: |
-          # Create target directory
+          # Create the target directory
           mkdir -p dist/universal/wart-dapp.app/Contents/MacOS
           
-          # Copy all files from ARM version to universal directory
+          # Copy all files from the ARM version to the universal directory
           cp -R dist/wart-dapp-arm64.app/* dist/universal/wart-dapp.app/
           
-          # Use lipo to create universal binary file
+          # Use lipo to create the universal binary file
           lipo -create \
             dist/wart-dapp-x86_64.app/Contents/MacOS/wart-dapp \
             dist/wart-dapp-arm64.app/Contents/MacOS/wart-dapp \
