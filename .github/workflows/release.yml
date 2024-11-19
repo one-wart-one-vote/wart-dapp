@@ -53,10 +53,13 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install -r requirements.txt
           brew install create-dmg
+          brew install openssl@3
 
       - name: Build for ARM
         env:
           ARCHFLAGS: "-arch arm64"
+          LDFLAGS: "-L/opt/homebrew/opt/openssl@3/lib"
+          CPPFLAGS: "-I/opt/homebrew/opt/openssl@3/include"
         run: |
           # Building ARM version
           python3 -m PyInstaller main-arm64.spec --distpath dist-arm64 --workpath build-arm64 --clean

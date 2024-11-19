@@ -5,9 +5,12 @@ block_cipher = None
 a = Analysis(
     ['main.py'],
     pathex=['.'],
-    binaries=[],
+    binaries=[
+        ('/opt/homebrew/opt/openssl/lib/libcrypto.dylib', '.'),
+        ('/opt/homebrew/opt/openssl/lib/libssl.dylib', '.')
+    ],
     datas=[],
-    hiddenimports=[],
+    hiddenimports=['pycoin'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
