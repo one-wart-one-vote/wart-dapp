@@ -10,7 +10,7 @@ a = Analysis(
         ('/opt/homebrew/opt/openssl@3/lib/libssl.3.dylib', '.')
     ],
     datas=[],
-    hiddenimports=['pycoin'],
+    hiddenimports=['pycoin', 'pyperclip'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
