@@ -21,6 +21,4 @@ python -m PyInstaller main-arm64.spec
 http://62.72.44.89:3001 # blu & Asia
 
 deactivate
-
-
 ```
