@@ -6,8 +6,8 @@ a = Analysis(
     ['main.py'],
     pathex=['.'],
     binaries=[
-        ('/opt/homebrew/opt/openssl/lib/libcrypto.dylib', '.'),
-        ('/opt/homebrew/opt/openssl/lib/libssl.dylib', '.')
+        ('/opt/homebrew/opt/openssl@3/lib/libcrypto.3.dylib', '.'),
+        ('/opt/homebrew/opt/openssl@3/lib/libssl.3.dylib', '.')
     ],
     datas=[],
     hiddenimports=['pycoin'],
